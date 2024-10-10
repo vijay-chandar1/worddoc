@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Viewer and Editor</title>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+<div class="container">
+    <div class="upload-section">
+        <input type="file" id="fileInput" accept=".docx">
+        <button onclick="uploadDocument()">Upload</button>
+    </div>
+    <div class="viewer-editor">
+        <div class="viewer">
+            <iframe id="documentViewer" width="100%" height="100%" frameborder="0"></iframe>
+        </div>
+        <div class="editor">
+            <div id="quillEditor"></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script>
+    const quill = new Quill('#quillEditor', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, false] }],
+                ['bold', 'italic', 'underline'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['link', 'image'],
+                ['clean']
+            ]
+        }
+    });
+
+    function uploadDocument() {
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];
+
+        if (!file) {
+            alert("Please select a file.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('document', file);
+
+        fetch('/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else {
+                document.getElementById('documentViewer').src = data.html_url;
+            }
+        })
+        .catch(error => {
+            console.error("Error uploading the document:", error);
+            alert("Error uploading the document.");
+        });
+    }
+</script>
+</body>
+</html>

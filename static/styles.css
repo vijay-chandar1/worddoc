@@ -1,0 +1,59 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.upload-section {
+    padding: 10px;
+    background-color: #f5f5f5;
+    text-align: center;
+}
+
+.viewer-editor {
+    display: flex;
+    flex: 1;
+    height: 100%;
+}
+
+.viewer, .editor {
+    width: 50%;
+    border: 1px solid #ddd;
+    overflow-y: auto;
+    height: 100%;
+}
+
+.viewer {
+    background-color: #f5f5f5;
+}
+
+.editor {
+    background-color: white;
+}
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 10px auto;
+    padding: 20mm;
+    background: white;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ddd;
+    page-break-after: always;
+}
+
+@media print {
+    .page {
+        box-shadow: none;
+        page-break-after: always;
+    }
+}

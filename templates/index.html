@@ -10,13 +10,14 @@
 <body>
 <div class="container">
     <div class="upload-section">
-        <input type="file" id="fileInput" accept=".docx">
+        <input type="file" id="fileInput" accept=".docx,.doc,.pdf">
         <button onclick="uploadDocument()">Upload</button>
     </div>
     <div class="viewer-editor">
         <div class="viewer">
             <iframe id="documentViewer" width="100%" height="100%" frameborder="0"></iframe>
         </div>
+        <div class="divider" id="divider"></div>
         <div class="editor">
             <div id="quillEditor"></div>
         </div>
@@ -25,17 +26,60 @@
 
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script>
+    // Initialize Quill editor with more features, including table and tooltip descriptions
     const quill = new Quill('#quillEditor', {
         theme: 'snow',
         modules: {
-            toolbar: [
-                [{ 'header': [1, 2, false] }],
-                ['bold', 'italic', 'underline'],
-                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                ['link', 'image'],
-                ['clean']
-            ]
+            toolbar: {
+                container: [
+                    [{ 'header': [1, 2, false] }],
+                    ['bold', 'italic', 'underline', 'strike'], // Add 'strike'
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    [{ 'align': [] }],
+                    ['link', 'image', 'video'], // Add video
+                    [{ 'table': true }], // Table module
+                    ['clean'] // Remove formatting
+                ],
+                handlers: {
+                    table: function() {
+                        this.quill.insertEmbed(this.quill.getSelection().index, 'table', 'insertTable');
+                    }
+                }
+            }
         }
+    });
+
+    // Add tooltips on hover
+    document.querySelectorAll('.ql-toolbar button').forEach(button => {
+        const format = button.classList[0].replace('ql-', '');
+        button.title = format.charAt(0).toUpperCase() + format.slice(1); // Tooltip from format
+    });
+
+    // Draggable divider logic
+    const divider = document.getElementById('divider');
+    const viewer = document.querySelector('.viewer');
+    const editor = document.querySelector('.editor');
+
+    let isDragging = false;
+
+    divider.addEventListener('mousedown', (e) => {
+        isDragging = true;
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+            let viewerWidth = e.clientX - viewer.getBoundingClientRect().left;
+            let editorWidth = window.innerWidth - viewerWidth - divider.offsetWidth;
+
+            if (viewerWidth > 200 && editorWidth > 200) { // Set minimum widths
+                viewer.style.width = viewerWidth + 'px';
+                editor.style.width = editorWidth + 'px';
+            }
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        isDragging = false;
     });
 
     function uploadDocument() {

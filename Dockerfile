@@ -1,16 +1,17 @@
 # Use an official Python runtime as a parent image
 FROM python:3.11-slim
 
-# Install LibreOffice (for DOCX to HTML conversion)
+# Install LibreOffice (for DOCX to HTML conversion) and clean up
 RUN apt-get update && \
-    apt-get install -y libreoffice libreoffice-writer && \
-    apt-get clean
+    apt-get install -y --no-install-recommends libreoffice libreoffice-writer && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Set the working directory in the container
 WORKDIR /app
 
 # Copy the current directory contents into the container at /app
-ADD . /app
+COPY . /app
 
 # Install any necessary Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt

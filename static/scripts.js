@@ -4,7 +4,7 @@ let editorInstance;
 ClassicEditor
     .create(document.querySelector('#ckeditor'), {
         toolbar: [
-            'heading', '|', 'bold', 'italic', 'underline', 'strikethrough', '|',
+            'heading', '|', 'bold', 'italic', '|',
             'bulletedList', 'numberedList', 'blockQuote', '|',
             'insertTable', 'tableColumn', 'tableRow', 'mergeTableCells', '|',
             'undo', 'redo'

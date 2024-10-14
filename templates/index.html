@@ -10,14 +10,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="static/fonts/NotoSans-Regular.js"></script>
-    <script src="static/fonts/NotoSans-Bold.js"></script>
-    <script src="static/fonts/NotoSans-Italic.js"></script>
 </head>
 <body>
     <div class="container">
         <div class="upload-section">
             <input type="file" id="fileInput" accept=".docx,.doc,.pdf">
             <button onclick="uploadDocument()">Upload</button>
+            <input type="text" id="authorName" placeholder="Enter Author's Name" style="margin-left: 10px;">
             <button onclick="exportToPDF()">Export as PDF</button>
         </div>
 

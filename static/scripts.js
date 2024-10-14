@@ -1,6 +1,6 @@
 let editorInstance;
 
-// Initialize CKEditor
+// Initialize CKEditor with event listener to store changes
 ClassicEditor
     .create(document.querySelector('#ckeditor'), {
         toolbar: [
@@ -17,42 +17,58 @@ ClassicEditor
     })
     .then(editor => {
         editorInstance = editor;
+
+        // Set up auto-save to local storage on data change
+        editor.model.document.on('change:data', () => {
+            const editorContent = editorInstance.getData();
+            localStorage.setItem("editorContent", editorContent);
+        });
+
+        // Load editor content from local storage if available
+        const savedEditorContent = localStorage.getItem("editorContent");
+        if (savedEditorContent) {
+            editorInstance.setData(savedEditorContent);
+        }
     })
     .catch(error => {
         console.error('Error initializing CKEditor:', error);
     });
 
+// Load saved viewer content if available
+const viewer = document.getElementById('documentViewer');
+const savedViewerContent = localStorage.getItem("viewerContent");
+if (savedViewerContent) {
+    viewer.srcdoc = savedViewerContent; // Use srcdoc for inline HTML content
+}
+
 function exportToPDF() {
-    // Get CKEditor content as HTML
     const editorContent = editorInstance.getData();
-
-    // Initialize jsPDF
     const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
-
-    // Set the default font to Noto Sans Regular (already registered by NotoSans-Regular.js)
     pdf.setFont("NotoSans-Regular", "normal");
 
-    // Parse the HTML and extract tables
+    const authorName = document.getElementById("authorName").value;
+
+    // Get the current date and time in IST format
+    const currentISTTime = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+
     const parser = new DOMParser();
     const doc = parser.parseFromString(editorContent, 'text/html');
-
-    // Extract tables from the content
     const tables = doc.querySelectorAll('table');
+
     if (tables.length === 0) {
         alert('No tables found to export.');
         return;
     }
 
+    // First draw the table content without footer
     tables.forEach((table, index) => {
         const body = [];
         const header = [];
 
-        // Extract headers
         table.querySelectorAll('thead th').forEach(th => {
             header.push(th.innerText);
         });
 
-        // Extract rows
         table.querySelectorAll('tbody tr').forEach(tr => {
             const row = [];
             tr.querySelectorAll('td').forEach(td => {
@@ -61,26 +77,47 @@ function exportToPDF() {
             body.push(row);
         });
 
-        // Add table to PDF using autoTable with custom font
         pdf.autoTable({
             head: [header],
             body: body,
-            startY: index === 0 ? 10 : pdf.autoTable.previous.finalY + 10, // Start after the previous table
+            startY: index === 0 ? 10 : pdf.autoTable.previous.finalY + 10,
             styles: {
-                font: 'NotoSans-Regular', // Use the custom font for the table
-                lineWidth: 0.1,           // Border line width
-                lineColor: [0, 0, 0]      // Border color (black)
+                font: 'NotoSans-Regular',
+                lineWidth: 0.1,
+                lineColor: [0, 0, 0]
             },
-            tableLineWidth: 0.1,         // Border around the table
-            tableLineColor: [0, 0, 0],   // Border color around the table
-            theme: 'grid'                // Ensures that the table has full grid lines
+            tableLineWidth: 0.1,
+            tableLineColor: [0, 0, 0],
+            theme: 'grid'
         });
     });
 
-    // Save the PDF after adding tables
+    // Get total number of pages after content is drawn
+    const totalPages = pdf.internal.getNumberOfPages();
+
+    // Add footer with correct page numbers on every page
+    for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);  // Go to the specified page
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+
+        // Add timestamp (left)
+        pdf.setFontSize(10);
+        pdf.text(`Generated: ${currentISTTime}`, 10, pageHeight - 10);
+
+        // Add page number (center)
+        pdf.text(`Page ${i}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+
+        // Add author name (right) if provided
+        if (authorName) {
+            pdf.text(`Author: ${authorName}`, pageWidth - 40, pageHeight - 10);
+        }
+    }
+
+    // Finally, save the PDF
     pdf.save('document.pdf');
 }
-    
+
 function uploadDocument() {
     const fileInput = document.getElementById('fileInput');
     const file = fileInput.files[0];
@@ -93,24 +130,17 @@ function uploadDocument() {
     const formData = new FormData();
     formData.append('document', file);
 
-    // Show the loading spinner
     document.getElementById('loadingSpinner').style.display = 'block';
 
-    // Initialize timeout handlers for changing messages
     let loadingText = document.getElementById('loadingText');
     const timeouts = [];
 
-    // First message after 10 seconds
     timeouts.push(setTimeout(() => {
         loadingText.textContent = "Opening document... Please wait.";
     }, 10000));
-
-    // Second message after 20 seconds
     timeouts.push(setTimeout(() => {
         loadingText.textContent = "Analyzing document... Please wait.";
     }, 20000));
-
-    // Third message after 30 seconds
     timeouts.push(setTimeout(() => {
         loadingText.textContent = "Parsing pages... Please wait.";
     }, 30000));
@@ -124,82 +154,54 @@ function uploadDocument() {
         if (data.error) {
             alert(data.error);
         } else {
-            // Set the document viewer's source to display the uploaded document
             const viewer = document.getElementById('documentViewer');
             viewer.src = data.html_url;
 
-            // Fetch the document as HTML content
             fetch(data.html_url)
                 .then(response => response.text())
                 .then(documentHtml => {
                     console.log("Document HTML fetched:", documentHtml);
 
-                    // Parse the HTML to extract text from specific elements
+                    localStorage.setItem("viewerContent", documentHtml);
+
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(documentHtml, 'text/html');
-                    
-                    // Adjusted logic for parsing author:
-                    const headerDiv = doc.querySelector('div[title="header"]') || doc.querySelector('p[align="left"]');
-                    let authorName = "Unknown Author";
+                    const tables = doc.querySelectorAll('table');
 
-                    if (headerDiv) {
-                        const headerFonts = headerDiv.querySelectorAll('font, span, br');
-                        if (headerFonts.length >= 2) {
-                            if (headerFonts[1].textContent.trim()) {
-                                authorName = headerFonts[1].textContent.trim(); // Second font likely contains the author
-                            }
-                        }
+                    if (tables.length > 0) {
+                        let allTablesHtml = "";
+                        tables.forEach(table => {
+                            allTablesHtml += table.outerHTML;
+                        });
+                        editorInstance.setData(allTablesHtml);
+                    } else {
+                        const tableHtml = 
+                            `<table>
+                                <thead>
+                                    <tr>
+                                        <th>Sr.</th>
+                                        <th>V.T</th>
+                                        <th>Granth</th>
+                                        <th>ShastraPath</th>
+                                        <th>Pub. Rem</th>
+                                        <th>In. Rem</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>स्व.</td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>`;
+                        editorInstance.setData(tableHtml);
                     }
-                    console.log("Author name:", authorName);
 
-                    // Extract the timestamp from the footer div
-                    const footerDiv = doc.querySelector('div[title="footer"], p[align="right"]');
-                    let logTimestamp = "No timestamp";
-
-                    if (footerDiv) {
-                        const timestampElement = footerDiv.querySelector('b');
-                        if (timestampElement) {
-                            logTimestamp = timestampElement.innerText.trim(); // Assign the timestamp
-                        }
-                    }
-                    console.log("Log Timestamp:", logTimestamp);
-
-                    // Create a table with the parsed data
-                    const tableHtml = 
-                        `<table>
-                            <thead>
-                                <tr>
-                                    <th>Sr.</th>
-                                    <th>V.T</th>
-                                    <th>Granth</th>
-                                    <th>ShastraPath</th>
-                                    <th>Pub. Rem</th>
-                                    <th>In. Rem</th>
-                                    <th>Author</th>
-                                    <th>Log Timestamp</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>1</td>
-                                    <td>स्व.</td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td>${authorName}</td>
-                                    <td>${logTimestamp}</td>
-                                </tr>
-                            </tbody>
-                        </table>`;
-
-                    // Add the table content to CKEditor
-                    editorInstance.setData(tableHtml);
-                    
-                    // Hide the loading spinner once processing is done
                     document.getElementById('loadingSpinner').style.display = 'none';
-
-                    // Clear all pending timeouts once the process is complete
                     timeouts.forEach(timeout => clearTimeout(timeout));
                 })
                 .catch(err => {

@@ -114,3 +114,15 @@ body, html {
     font-size: 16px;
     color: #333;
 }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #000;
+}
+
+th, td {
+    padding: 8px;
+    border: 1px solid #000;
+    text-align: left;
+}

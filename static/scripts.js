@@ -22,6 +22,61 @@ ClassicEditor
         console.error('Error initializing CKEditor:', error);
     });
 
+function exportToPDF() {
+    // Get CKEditor content as HTML
+    const editorContent = editorInstance.getData();
+
+    // Initialize jsPDF
+    const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+
+    // Parse the HTML and extract tables
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(editorContent, 'text/html');
+
+    // Extract tables from the content
+    const tables = doc.querySelectorAll('table');
+    if (tables.length === 0) {
+        alert('No tables found to export.');
+        return;
+    }
+
+    tables.forEach((table, index) => {
+        const body = [];
+        const header = [];
+
+        // Extract headers
+        table.querySelectorAll('thead th').forEach(th => {
+            header.push(th.innerText);
+        });
+
+        // Extract rows
+        table.querySelectorAll('tbody tr').forEach(tr => {
+            const row = [];
+            tr.querySelectorAll('td').forEach(td => {
+                row.push(td.innerText);
+            });
+            body.push(row);
+        });
+
+        // Add table to PDF using autoTable with cell borders
+        pdf.autoTable({
+            head: [header],
+            body: body,
+            startY: index === 0 ? 10 : pdf.autoTable.previous.finalY + 10, // Start after previous table
+            styles: {
+                lineWidth: 0.1,      // Border line width
+                lineColor: [0, 0, 0] // Border color (black)
+            },
+            tableLineWidth: 0.1,   // Border around the table
+            tableLineColor: [0, 0, 0], // Border color around the table
+            theme: 'grid'          // Ensures that the table has full grid lines
+        });
+    });
+
+    // Save the PDF after adding tables
+    pdf.save('document.pdf');
+}
+    
 function uploadDocument() {
     const fileInput = document.getElementById('fileInput');
     const file = fileInput.files[0];

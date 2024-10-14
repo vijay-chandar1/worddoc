@@ -29,6 +29,9 @@ function exportToPDF() {
     // Initialize jsPDF
     const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
 
+    // Set the default font to Noto Sans Regular (already registered by NotoSans-Regular.js)
+    pdf.setFont("NotoSans-Regular", "normal");
+
     // Parse the HTML and extract tables
     const parser = new DOMParser();
     const doc = parser.parseFromString(editorContent, 'text/html');
@@ -58,18 +61,19 @@ function exportToPDF() {
             body.push(row);
         });
 
-        // Add table to PDF using autoTable with cell borders
+        // Add table to PDF using autoTable with custom font
         pdf.autoTable({
             head: [header],
             body: body,
-            startY: index === 0 ? 10 : pdf.autoTable.previous.finalY + 10, // Start after previous table
+            startY: index === 0 ? 10 : pdf.autoTable.previous.finalY + 10, // Start after the previous table
             styles: {
-                lineWidth: 0.1,      // Border line width
-                lineColor: [0, 0, 0] // Border color (black)
+                font: 'NotoSans-Regular', // Use the custom font for the table
+                lineWidth: 0.1,           // Border line width
+                lineColor: [0, 0, 0]      // Border color (black)
             },
-            tableLineWidth: 0.1,   // Border around the table
-            tableLineColor: [0, 0, 0], // Border color around the table
-            theme: 'grid'          // Ensures that the table has full grid lines
+            tableLineWidth: 0.1,         // Border around the table
+            tableLineColor: [0, 0, 0],   // Border color around the table
+            theme: 'grid'                // Ensures that the table has full grid lines
         });
     });
 
@@ -178,7 +182,7 @@ function uploadDocument() {
                             <tbody>
                                 <tr>
                                     <td>1</td>
-                                    <td></td>
+                                    <td>स्व.</td>
                                     <td></td>
                                     <td></td>
                                     <td></td>

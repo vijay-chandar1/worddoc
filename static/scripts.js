@@ -162,7 +162,11 @@ function uploadDocument() {
                 .then(documentHtml => {
                     console.log("Document HTML fetched:", documentHtml);
 
+                    // Update localStorage with the new document HTML
                     localStorage.setItem("viewerContent", documentHtml);
+
+                    // Refresh the left viewer with the new content
+                    viewer.srcdoc = documentHtml;
 
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(documentHtml, 'text/html');

@@ -34,6 +34,33 @@ ClassicEditor
         console.error('Error initializing CKEditor:', error);
     });
 
+// Logic to handle file name persistence
+document.addEventListener("DOMContentLoaded", function () {
+    // Check if there's a file name in localStorage and update the UI
+    const currentFileName = localStorage.getItem('currentFileName');
+    const currentFileElement = document.getElementById('currentFile');
+    
+    if (currentFileName) {
+        currentFileElement.textContent = `Currently Editing: ${currentFileName}`;
+    } else {
+        currentFileElement.textContent = "Currently Editing: None";
+    }
+
+    // Function to handle file upload
+    document.getElementById('fileInput').addEventListener('change', function () {
+        const file = this.files[0];
+        if (file) {
+            const fileName = file.name;
+
+            // Update the "Currently Editing" element
+            currentFileElement.textContent = `Currently Editing: ${fileName}`;
+
+            // Save the file name to localStorage
+            localStorage.setItem('currentFileName', fileName);
+        }
+    });
+});
+
 // Load saved viewer content if available
 const viewer = document.getElementById('documentViewer');
 const savedViewerContent = localStorage.getItem("viewerContent");
@@ -51,6 +78,10 @@ function exportToPDF() {
     // Get the current date and time in IST format
     const currentISTTime = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
 
+    // Get the current file name from localStorage
+    const currentFileName = localStorage.getItem('currentFileName') || 'document';
+
+    // Parse the editor content and find tables
     const parser = new DOMParser();
     const doc = parser.parseFromString(editorContent, 'text/html');
     const tables = doc.querySelectorAll('table');
@@ -60,7 +91,7 @@ function exportToPDF() {
         return;
     }
 
-    // First draw the table content without footer
+    // First, draw the table content without footer
     tables.forEach((table, index) => {
         const body = [];
         const header = [];
@@ -121,8 +152,9 @@ function exportToPDF() {
         }
     }
 
-    // Finally, save the PDF
-    pdf.save('document.pdf');
+    // Save the PDF using the current file name
+    const pdfFileName = currentFileName.replace(/\.[^/.]+$/, "") + '.pdf'; // Remove the original extension and add .pdf
+    pdf.save(pdfFileName);
 }
 
 function uploadDocument() {
@@ -177,65 +209,94 @@ function uploadDocument() {
                     const doc = parser.parseFromString(documentHtml, 'text/html');
                     let tables = Array.from(doc.querySelectorAll('table'));
 
-                    const mergedTables = [];
-                    const tableGroups = new Map();
+                    if (tables.length === 0) {
+                        // No tables, so insert a default table into the editor
+                        const defaultTable = `
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Sr.</th>
+                                        <th>V.T</th>
+                                        <th>Granth</th>
+                                        <th>ShastraPath</th>
+                                        <th>Pub. Rem</th>
+                                        <th>In. Rem</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>स्व.</td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>`;
+                        editorInstance.setData(defaultTable);
+                    } else {
+                        // Handle table merging if multiple tables are found
+                        const mergedTables = [];
+                        const tableGroups = new Map();
 
-                    tables.forEach((table) => {
-                        const rows = Array.from(table.rows);
-                        if (rows.length === 0) return;
+                        tables.forEach((table) => {
+                            const rows = Array.from(table.rows);
+                            if (rows.length === 0) return;
 
-                        const columnCount = rows[0].cells.length;
-                        if (columnCount <= 3) {
-                            // Skip tables with 3 or fewer columns
-                            return;
-                        }
-
-                        const headerRow = rows[0].innerHTML;
-                        const key = `${columnCount}_${headerRow}`;
-
-                        if (!tableGroups.has(key)) {
-                            tableGroups.set(key, {
-                                header: headerRow,
-                                rows: []
-                            });
-                        }
-
-                        rows.forEach((row, rowIndex) => {
-                            if (rowIndex !== 0 || row.innerHTML !== headerRow) {
-                                const cells = Array.from(row.cells);
-                                if (cells[0] && cells[0].textContent.trim() === "") {
-                                    // Merge with the previous row if the first cell is empty
-                                    const previousRow = tableGroups.get(key).rows[tableGroups.get(key).rows.length - 1];
-                                    if (previousRow) {
-                                        cells.forEach((cell, cellIndex) => {
-                                            if (cellIndex > 0) {
-                                                previousRow.cells[cellIndex].innerHTML += `<br>${cell.innerHTML}`;
-                                            }
-                                        });
-                                    }
-                                } else {
-                                    // Otherwise, add the row as-is
-                                    tableGroups.get(key).rows.push(row.cloneNode(true));
-                                }
+                            const columnCount = rows[0].cells.length;
+                            if (columnCount <= 3) {
+                                // Skip tables with 3 or fewer columns
+                                return;
                             }
+
+                            const headerRow = rows[0].innerHTML;
+                            const key = `${columnCount}_${headerRow}`;
+
+                            if (!tableGroups.has(key)) {
+                                tableGroups.set(key, {
+                                    header: headerRow,
+                                    rows: []
+                                });
+                            }
+
+                            rows.forEach((row, rowIndex) => {
+                                if (rowIndex !== 0 || row.innerHTML !== headerRow) {
+                                    const cells = Array.from(row.cells);
+                                    if (cells[0] && cells[0].textContent.trim() === "") {
+                                        // Merge with the previous row if the first cell is empty
+                                        const previousRow = tableGroups.get(key).rows[tableGroups.get(key).rows.length - 1];
+                                        if (previousRow) {
+                                            cells.forEach((cell, cellIndex) => {
+                                                if (cellIndex > 0) {
+                                                    previousRow.cells[cellIndex].innerHTML += `<br>${cell.innerHTML}`;
+                                                }
+                                            });
+                                        }
+                                    } else {
+                                        // Otherwise, add the row as-is
+                                        tableGroups.get(key).rows.push(row.cloneNode(true));
+                                    }
+                                }
+                            });
                         });
-                    });
 
-                    tableGroups.forEach((group) => {
-                        const mergedTable = document.createElement('table');
-                        const thead = document.createElement('thead');
-                        thead.innerHTML = `<tr>${group.header}</tr>`;
-                        mergedTable.appendChild(thead);
+                        tableGroups.forEach((group) => {
+                            const mergedTable = document.createElement('table');
+                            const thead = document.createElement('thead');
+                            thead.innerHTML = `<tr>${group.header}</tr>`;
+                            mergedTable.appendChild(thead);
 
-                        const tbody = document.createElement('tbody');
-                        group.rows.forEach(row => tbody.appendChild(row));
-                        mergedTable.appendChild(tbody);
+                            const tbody = document.createElement('tbody');
+                            group.rows.forEach(row => tbody.appendChild(row));
+                            mergedTable.appendChild(tbody);
 
-                        mergedTables.push(mergedTable.outerHTML);
-                    });
+                            mergedTables.push(mergedTable.outerHTML);
+                        });
 
-                    // Combine all merged tables into the editor
-                    editorInstance.setData(mergedTables.join("<br><br>"));
+                        // Combine all merged tables into the editor
+                        editorInstance.setData(mergedTables.join("<br><br>"));
+                    }
 
                     document.getElementById('loadingSpinner').style.display = 'none';
                     timeouts.forEach(timeout => clearTimeout(timeout));

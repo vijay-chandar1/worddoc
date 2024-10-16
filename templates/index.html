@@ -14,13 +14,21 @@
 <body>
     <div class="container">
         <div class="upload-section">
-            <span id="currentFile" style="margin-right: 10px;">Currently Editing: None</span>
-            <input type="file" id="fileInput" accept=".docx,.doc,.pdf">
-            <button onclick="uploadDocument()">Upload</button>
-            <input type="text" id="authorName" placeholder="Enter Author's Name" style="margin-left: 10px;">
-            <button onclick="exportToPDF()">Export as PDF</button>
+            <div class="left">
+                <input type="file" id="fileInput" accept=".docx,.doc,.pdf">
+                <button onclick="uploadDocument()">Upload</button>
+            </div>
+            
+            <div class="center">
+                <input type="text" id="authorName" placeholder="Enter Author's Name">
+            </div>
+        
+            <div class="right">
+                <span id="currentFile">Currently Editing: None</span>
+                <button id="exportButton" onclick="exportToPDF()">Export as PDF</button>
+            </div>
         </div>
-
+        
         <!-- Spinner for loading -->
         <div id="loadingSpinner" style="display: none;">
             <div class="spinner-container">

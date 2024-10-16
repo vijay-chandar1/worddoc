@@ -148,3 +148,92 @@ th, td {
     border: 1px solid #000;
     text-align: left;
 }
+
+.upload-section {
+    padding: 15px;
+    background-color: #f0f0f5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #ddd;
+    width: 100%;
+    box-sizing: border-box; /* Ensures padding is included in width */
+}
+
+.upload-section .left, 
+.upload-section .center, 
+.upload-section .right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.upload-section .left {
+    flex: 1; /* Takes more space compared to center and right */
+}
+
+.upload-section .center {
+    flex: 1; /* Allows center to take up space while remaining centered */
+    justify-content: center;
+}
+
+.upload-section .right {
+    flex: 0; /* Keeps right section compact */
+    justify-content: flex-end;
+    white-space: nowrap; /* Prevents the button text from wrapping */
+}
+
+.upload-section input[type="file"] {
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.upload-section button {
+    padding: 8px 12px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background-color: #007bff;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.upload-section button:hover {
+    background-color: #0056b3;
+}
+
+.upload-section input[type="text"] {
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    width: 200px;
+}
+
+#currentFile {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+    margin-right: 10px;
+}
+
+#exportButton {
+    padding: 8px 12px;
+    border-radius: 5px;
+    border: 1px solid #28a745;
+    background-color: #28a745;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#exportButton:hover {
+    background-color: #218838;
+}

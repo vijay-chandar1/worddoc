@@ -88,7 +88,14 @@ function exportToPDF() {
             },
             tableLineWidth: 0.1,
             tableLineColor: [0, 0, 0],
-            theme: 'grid'
+            theme: 'grid',
+            columnStyles: {
+                0: { cellWidth: 10 }, 
+                1: { cellWidth: 10 },  
+                2: { cellWidth: 45 },  
+                3: { cellWidth: 75 },  
+                4: { cellWidth: 20 },  
+            }
         });
     });
 
@@ -162,48 +169,73 @@ function uploadDocument() {
                 .then(documentHtml => {
                     console.log("Document HTML fetched:", documentHtml);
 
-                    // Update localStorage with the new document HTML
                     localStorage.setItem("viewerContent", documentHtml);
 
-                    // Refresh the left viewer with the new content
                     viewer.srcdoc = documentHtml;
 
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(documentHtml, 'text/html');
-                    const tables = doc.querySelectorAll('table');
+                    let tables = Array.from(doc.querySelectorAll('table'));
 
-                    if (tables.length > 0) {
-                        let allTablesHtml = "";
-                        tables.forEach(table => {
-                            allTablesHtml += table.outerHTML;
+                    const mergedTables = [];
+                    const tableGroups = new Map();
+
+                    tables.forEach((table) => {
+                        const rows = Array.from(table.rows);
+                        if (rows.length === 0) return;
+
+                        const columnCount = rows[0].cells.length;
+                        if (columnCount <= 3) {
+                            // Skip tables with 3 or fewer columns
+                            return;
+                        }
+
+                        const headerRow = rows[0].innerHTML;
+                        const key = `${columnCount}_${headerRow}`;
+
+                        if (!tableGroups.has(key)) {
+                            tableGroups.set(key, {
+                                header: headerRow,
+                                rows: []
+                            });
+                        }
+
+                        rows.forEach((row, rowIndex) => {
+                            if (rowIndex !== 0 || row.innerHTML !== headerRow) {
+                                const cells = Array.from(row.cells);
+                                if (cells[0] && cells[0].textContent.trim() === "") {
+                                    // Merge with the previous row if the first cell is empty
+                                    const previousRow = tableGroups.get(key).rows[tableGroups.get(key).rows.length - 1];
+                                    if (previousRow) {
+                                        cells.forEach((cell, cellIndex) => {
+                                            if (cellIndex > 0) {
+                                                previousRow.cells[cellIndex].innerHTML += `<br>${cell.innerHTML}`;
+                                            }
+                                        });
+                                    }
+                                } else {
+                                    // Otherwise, add the row as-is
+                                    tableGroups.get(key).rows.push(row.cloneNode(true));
+                                }
+                            }
                         });
-                        editorInstance.setData(allTablesHtml);
-                    } else {
-                        const tableHtml = 
-                            `<table>
-                                <thead>
-                                    <tr>
-                                        <th>Sr.</th>
-                                        <th>V.T</th>
-                                        <th>Granth</th>
-                                        <th>ShastraPath</th>
-                                        <th>Pub. Rem</th>
-                                        <th>In. Rem</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>1</td>
-                                        <td>स्व.</td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                    </tr>
-                                </tbody>
-                            </table>`;
-                        editorInstance.setData(tableHtml);
-                    }
+                    });
+
+                    tableGroups.forEach((group) => {
+                        const mergedTable = document.createElement('table');
+                        const thead = document.createElement('thead');
+                        thead.innerHTML = `<tr>${group.header}</tr>`;
+                        mergedTable.appendChild(thead);
+
+                        const tbody = document.createElement('tbody');
+                        group.rows.forEach(row => tbody.appendChild(row));
+                        mergedTable.appendChild(tbody);
+
+                        mergedTables.push(mergedTable.outerHTML);
+                    });
+
+                    // Combine all merged tables into the editor
+                    editorInstance.setData(mergedTables.join("<br><br>"));
 
                     document.getElementById('loadingSpinner').style.display = 'none';
                     timeouts.forEach(timeout => clearTimeout(timeout));

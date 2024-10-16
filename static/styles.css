@@ -66,10 +66,13 @@ body, html {
 }
 
 .ck-editor__editable {
-    overflow: auto;  /* Ensure internal scrolling for CKEditor content */
     width: 100%;  /* Ensure the CKEditor fits within the container */
     height: auto;  /* Let CKEditor adjust based on content */
     min-height: 100%;  /* Prevent CKEditor from shrinking */
+}
+
+.ck.ck-editor__editable_inline {
+    overflow: hidden !important;
 }
 
 .page {

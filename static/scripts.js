@@ -34,6 +34,15 @@ ClassicEditor
         console.error('Error initializing CKEditor:', error);
     });
 
+function confirmClearEditor() {
+    const confirmClear = confirm("Are you sure you want to clear the editor? This action cannot be undone.");
+    
+    if (confirmClear) {
+        editorInstance.setData('');  // Clear the CKEditor content
+        localStorage.removeItem("editorContent");  // Remove saved content from localStorage
+    }
+}
+    
 // Logic to handle file name persistence
 document.addEventListener("DOMContentLoaded", function () {
     // Check if there's a file name in localStorage and update the UI

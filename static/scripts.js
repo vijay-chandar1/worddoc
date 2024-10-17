@@ -325,3 +325,72 @@ function uploadDocument() {
         timeouts.forEach(timeout => clearTimeout(timeout));
     });
 }
+
+function importLeftViewerDocument() {
+    const fileInput = document.getElementById('viewerFileInput');  // Changed ID to viewerFileInput
+    const file = fileInput.files[0];
+
+    if (!file) {
+        alert("Please select a file.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('document', file);
+
+    document.getElementById('loadingSpinner').style.display = 'block';
+
+    let loadingText = document.getElementById('loadingText');
+    const timeouts = [];
+
+    timeouts.push(setTimeout(() => {
+        loadingText.textContent = "Opening document... Please wait.";
+    }, 10000));
+    timeouts.push(setTimeout(() => {
+        loadingText.textContent = "Analyzing document... Please wait.";
+    }, 20000));
+    timeouts.push(setTimeout(() => {
+        loadingText.textContent = "Parsing pages... Please wait.";
+    }, 30000));
+
+    fetch('/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+        } else {
+            const viewer = document.getElementById('documentViewer');
+            viewer.src = data.html_url;
+
+            fetch(data.html_url)
+                .then(response => response.text())
+                .then(documentHtml => {
+                    console.log("Document HTML fetched:", documentHtml);
+
+                    // Save the content to localStorage for future retrieval
+                    localStorage.setItem("viewerContent", documentHtml);
+
+                    // Update the left viewer with the fetched document HTML
+                    viewer.srcdoc = documentHtml;
+
+                    document.getElementById('loadingSpinner').style.display = 'none';
+                    timeouts.forEach(timeout => clearTimeout(timeout));
+                })
+                .catch(err => {
+                    console.error("Error parsing document:", err);
+                    alert("Error parsing document content.");
+                    document.getElementById('loadingSpinner').style.display = 'none';
+                    timeouts.forEach(timeout => clearTimeout(timeout));
+                });
+        }
+    })
+    .catch(error => {
+        console.error("Error uploading the document:", error);
+        alert("Error uploading the document.");
+        document.getElementById('loadingSpinner').style.display = 'none';
+        timeouts.forEach(timeout => clearTimeout(timeout));
+    });
+}

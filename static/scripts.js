@@ -175,6 +175,15 @@ function uploadDocument() {
         return;
     }
 
+    // Check if the editor content is not empty
+    const editorContent = editorInstance.getData().trim();
+    if (editorContent) {
+        const confirmRefresh = confirm("The editor content will be refreshed and cannot be undone. Do you wish to continue?");
+        if (!confirmRefresh) {
+            return; // Stop the upload if the user cancels
+        }
+    }
+
     const formData = new FormData();
     formData.append('document', file);
 
@@ -217,9 +226,56 @@ function uploadDocument() {
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(documentHtml, 'text/html');
                     let tables = Array.from(doc.querySelectorAll('table'));
+                    let validTablesFound = false;
 
-                    if (tables.length === 0) {
-                        // No tables, so insert a default table into the editor
+                    const mergedTables = [];
+                    const tableGroups = new Map();
+
+                    tables.forEach((table) => {
+                        const rows = Array.from(table.rows);
+                        if (rows.length === 0) return;
+
+                        const columnCount = rows[0].cells.length;
+                        if (columnCount <= 3) {
+                            // Skip tables with 3 or fewer columns
+                            return;
+                        }
+
+                        validTablesFound = true; // Mark that a valid table is found
+
+                        const headerRow = rows[0].innerHTML;
+                        const key = `${columnCount}_${headerRow}`;
+
+                        if (!tableGroups.has(key)) {
+                            tableGroups.set(key, {
+                                header: headerRow,
+                                rows: []
+                            });
+                        }
+
+                        rows.forEach((row, rowIndex) => {
+                            if (rowIndex !== 0 || row.innerHTML !== headerRow) {
+                                const cells = Array.from(row.cells);
+                                if (cells[0] && cells[0].textContent.trim() === "") {
+                                    // Merge with the previous row if the first cell is empty
+                                    const previousRow = tableGroups.get(key).rows[tableGroups.get(key).rows.length - 1];
+                                    if (previousRow) {
+                                        cells.forEach((cell, cellIndex) => {
+                                            if (cellIndex > 0) {
+                                                previousRow.cells[cellIndex].innerHTML += `<br>${cell.innerHTML}`;
+                                            }
+                                        });
+                                    }
+                                } else {
+                                    // Otherwise, add the row as-is
+                                    tableGroups.get(key).rows.push(row.cloneNode(true));
+                                }
+                            }
+                        });
+                    });
+
+                    if (!validTablesFound) {
+                        // No valid tables found, insert the default table
                         const defaultTable = `
                             <table>
                                 <thead>
@@ -245,51 +301,7 @@ function uploadDocument() {
                             </table>`;
                         editorInstance.setData(defaultTable);
                     } else {
-                        // Handle table merging if multiple tables are found
-                        const mergedTables = [];
-                        const tableGroups = new Map();
-
-                        tables.forEach((table) => {
-                            const rows = Array.from(table.rows);
-                            if (rows.length === 0) return;
-
-                            const columnCount = rows[0].cells.length;
-                            if (columnCount <= 3) {
-                                // Skip tables with 3 or fewer columns
-                                return;
-                            }
-
-                            const headerRow = rows[0].innerHTML;
-                            const key = `${columnCount}_${headerRow}`;
-
-                            if (!tableGroups.has(key)) {
-                                tableGroups.set(key, {
-                                    header: headerRow,
-                                    rows: []
-                                });
-                            }
-
-                            rows.forEach((row, rowIndex) => {
-                                if (rowIndex !== 0 || row.innerHTML !== headerRow) {
-                                    const cells = Array.from(row.cells);
-                                    if (cells[0] && cells[0].textContent.trim() === "") {
-                                        // Merge with the previous row if the first cell is empty
-                                        const previousRow = tableGroups.get(key).rows[tableGroups.get(key).rows.length - 1];
-                                        if (previousRow) {
-                                            cells.forEach((cell, cellIndex) => {
-                                                if (cellIndex > 0) {
-                                                    previousRow.cells[cellIndex].innerHTML += `<br>${cell.innerHTML}`;
-                                                }
-                                            });
-                                        }
-                                    } else {
-                                        // Otherwise, add the row as-is
-                                        tableGroups.get(key).rows.push(row.cloneNode(true));
-                                    }
-                                }
-                            });
-                        });
-
+                        // Combine all merged tables into the editor
                         tableGroups.forEach((group) => {
                             const mergedTable = document.createElement('table');
                             const thead = document.createElement('thead');
@@ -302,8 +314,6 @@ function uploadDocument() {
 
                             mergedTables.push(mergedTable.outerHTML);
                         });
-
-                        // Combine all merged tables into the editor
                         editorInstance.setData(mergedTables.join("<br><br>"));
                     }
 
@@ -327,7 +337,7 @@ function uploadDocument() {
 }
 
 function importLeftViewerDocument() {
-    const fileInput = document.getElementById('viewerFileInput');  // Changed ID to viewerFileInput
+    const fileInput = document.getElementById('fileInput');
     const file = fileInput.files[0];
 
     if (!file) {

@@ -17,7 +17,14 @@
         <div class="upload-section">
             <div class="upload-left">
                 <input type="file" id="fileInput" accept=".docx,.doc,.pdf">
-                <button onclick="uploadDocument()">Upload</button>
+                <!-- Upload button triggers either uploadDocument or importLeftViewerDocument based on the checkbox -->
+                <button id="uploadButton">Upload</button>
+                <!-- Checkbox for controlling the behavior -->
+                <label>
+                    <input type="checkbox" id="viewerCheckbox"> Only Update Viewer
+                    <!-- Info icon with a tooltip -->
+                    <span class="info-icon" title="Check this box to upload the document only to update the viewer on the left, keeping the editor unchanged.">ℹ️</span>
+                </label>
             </div>
             <div class="upload-right">
                 <input type="text" id="authorName" placeholder="Enter Author's Name">
@@ -36,18 +43,30 @@
         </div>        
 
         <div class="viewer-editor">
-            <div class="viewer" style="position: relative;">
-                <!-- File input for selecting document -->
-                <input type="file" id="viewerFileInput" accept=".docx,.doc,.pdf" style="position: absolute; top: 10px; right: 10px; z-index: 10;" onchange="importLeftViewerDocument()">
-                <!-- Document Viewer -->
+            <div class="viewer">
                 <iframe id="documentViewer" width="100%" height="100%" frameborder="0"></iframe>
             </div>
             <div class="divider" id="divider"></div>
             <div class="editor">
                 <div id="ckeditor"></div>
             </div>
-        </div>        
+        </div>
     </div>
+
+    <script>
+        // Add event listener to the Upload button
+        document.getElementById('uploadButton').addEventListener('click', function() {
+            const viewerCheckbox = document.getElementById('viewerCheckbox');
+
+            if (viewerCheckbox.checked) {
+                // If checkbox is checked, trigger the viewer upload logic
+                importLeftViewerDocument();
+            } else {
+                // If checkbox is not checked, trigger the editor upload logic
+                uploadDocument();
+            }
+        });
+    </script>
 
     <script src="{{ url_for('static', filename='scripts.js') }}"></script>
 </body>

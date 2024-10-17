@@ -28,14 +28,12 @@ body, html {
 }
 
 .viewer, .editor {
-    width: 50%;
-    border: 1px solid #ddd;
     height: 100%;
+    overflow: hidden;
 }
 
 .viewer {
     background-color: #f5f5f5;
-    overflow: hidden; /* Disable scrolling */
 }
 
 .viewer iframe {
@@ -46,12 +44,10 @@ body, html {
 
 .editor {
     background-color: white;
-    overflow-x: auto;  /* Enable horizontal scrolling */
-    overflow-y: auto;  /* Keep vertical scrolling */
-    position: relative;  /* Ensure the editor stays within its container */
+    overflow-x: auto;
+    overflow-y: auto;
     display: flex;
-    flex-direction: column;  /* Ensure content fits in the editor */
-    max-height: 100%;  /* Prevent overflowing vertically */
+    flex-direction: column;
 }
 
 .scroll-container {
@@ -66,9 +62,20 @@ body, html {
 }
 
 .ck-editor__editable {
-    width: 100%;  /* Ensure the CKEditor fits within the container */
-    height: auto;  /* Let CKEditor adjust based on content */
-    min-height: 100%;  /* Prevent CKEditor from shrinking */
+    width: 100%;
+    height: auto;
+    min-height: 100%;
+}
+
+/* Styling the draggable divider (gutter) */
+.gutter {
+    background-color: #ddd;
+    cursor: col-resize;
+    width: 5px;
+}
+
+.gutter.gutter-horizontal {
+    cursor: ew-resize;
 }
 
 .ck.ck-editor__editable_inline {

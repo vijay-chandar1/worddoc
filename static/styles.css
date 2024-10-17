@@ -162,6 +162,7 @@ th, td {
     border-radius: 4px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    max-width: 100%;
 }
 
 /* Hover effect for buttons */
@@ -181,8 +182,9 @@ th, td {
     align-items: center;
     justify-content: space-between;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    flex-wrap: wrap; /* Allow content to wrap on smaller screens */
+    flex-wrap: wrap;
     gap: 10px;
+    max-width: 100%;
 }
 
 .upload-left {
@@ -190,6 +192,7 @@ th, td {
     gap: 5px;
     align-items: center;
     margin-right: 15px;
+    max-width: 100%;
 }
 
 .upload-right {
@@ -199,7 +202,8 @@ th, td {
     margin-left: 10px;
     gap: 10px;
     align-items: center;
-    flex-wrap: wrap; /* Wraps content on smaller screens */
+    flex-wrap: wrap;
+    max-width: 100%;
 }
 
 .upload-right input,
@@ -213,6 +217,7 @@ th, td {
 
 .upload-right input[type="text"] {
     max-width: 250px;
+    width: 100%;
 }
 
 .upload-right #currentFile {
@@ -225,7 +230,7 @@ th, td {
 @media (max-width: 768px) {
     .upload-section {
         flex-direction: column;
-        align-items: stretch; /* Align items to stretch full width */
+        align-items: stretch;
     }
 
     .upload-left,
@@ -238,8 +243,9 @@ th, td {
 
     .upload-right {
         flex-direction: column;
-        gap: 5px; /* Reduce gap for smaller screens */
+        gap: 5px;
         align-items: stretch;
+        max-width: 100%;
     }
 
     .upload-right #currentFile {
@@ -250,23 +256,114 @@ th, td {
 
 @media (max-width: 480px) {
     .upload-right input[type="text"] {
-        max-width: 100%; /* Full width on very small screens */
+        max-width: 100%;
     }
 
     .upload-section {
-        padding: 5px 10px; /* Less padding for extra-small screens */
+        padding: 5px 10px;
+    }
+
+    .upload-left,
+    .upload-right {
+        max-width: 100%;
+    }
+
+    .upload-left button, 
+    .upload-left input[type="file"], 
+    .upload-right button {
+        max-width: 100%;
+        width: 100%;
+    }
+
+    #clearEditorButton,
+    #exportButton {
+        width: 100%;
     }
 }
 
+/* Info icon (retained original design) */
 .info-icon {
     margin-left: 5px;
     cursor: pointer;
     font-weight: bold;
     font-size: 14px;
-    color: #000000; /* Blue color for the icon */
+    color: #000000; /* Black color for the icon */
     border: 1px solid #c2c4c6; /* Circle border */
     border-radius: 50%; /* Makes the border round */
     padding: 2px 6px; /* Adjusts size of the circle */
     display: inline-block;
     text-align: center;
+}
+
+.info-icon:hover {
+    color: #bacce0;
+    border-color: #bacce0;
+}
+
+/* Checkbox and label styling */
+label {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+    margin-top: 10px;
+    padding-left: 8px;
+    flex-wrap: wrap;
+}
+
+label input[type="checkbox"] {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 1px solid #999;
+    border-radius: 2px;
+    outline: none;
+    margin-right: 8px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+label input[type="checkbox"]:checked {
+    background-color: #000000;
+    border-color: #000000;
+}
+
+label input[type="checkbox"]:checked::before {
+    content: "✔";
+    color: white;
+    font-size: 12px;
+    position: absolute;
+    top: -2px;
+    left: 2px;
+}
+
+@media (max-width: 768px) {
+    label {
+        justify-content: space-between;
+        font-size: 13px;
+    }
+
+    .info-icon {
+        font-size: 12px; /* Slightly smaller on smaller screens */
+        padding: 2px 5px;
+    }
+}
+
+@media (max-width: 480px) {
+    label {
+        flex-direction: column;
+        align-items: flex-start;
+        font-size: 12px;
+        padding-left: 0;
+    }
+
+    label input[type="checkbox"] {
+        margin-bottom: 5px;
+    }
+
+    .info-icon {
+        margin-top: 5px;
+    }
 }

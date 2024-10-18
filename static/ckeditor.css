@@ -7,22 +7,40 @@
 	}
 }
 
+html, body {
+	height: 100%;
+	margin: 0;
+	padding: 0;
+}
+
 .main-container {
 	font-family: 'Lato';
 	width: fit-content;
 	margin-left: auto;
 	margin-right: auto;
+	height: 100vh; /* Full viewport height */
+}
+
+.editor-container_classic-editor .editor-container__editor {
+	width: 100%; /* Allow flexible width */
+	height: 100%; /* Take full height */
+	box-sizing: border-box; /* Prevent content overflow */
+	display: flex; /* Flexbox layout to manage full height */
+	flex-direction: column; /* Makes editor take vertical space */
+}
+
+.ck-editor__editable_inline {
+	height: 100%; /* Ensures the editable area takes the full container height */
+	display: flex; /* Flexbox ensures child content is managed */
+	flex-direction: column; /* Layout direction for content */
 }
 
 .ck-content {
 	font-family: 'Lato';
 	line-height: 1.6;
 	word-break: break-word;
-}
-
-.editor-container_classic-editor .editor-container__editor {
-	min-width: 795px;
-	max-width: 795px;
+	flex-grow: 1; /* Ensures ck-content grows to full height even if empty */
+	min-height: 100%; /* Ensures it takes full height */
 }
 
 .ck-content h3.category {

@@ -24,16 +24,17 @@ body, html {
     display: flex;
     flex: 1;
     height: 100%;
-    overflow: hidden; /* Prevent viewer-editor from scrolling */
+    overflow: auto;
 }
 
 .viewer, .editor {
     height: 100%;
-    overflow: hidden;
+    overflow: auto;
 }
 
 .viewer {
     background-color: #f5f5f5;
+    overflow: hidden;
 }
 
 .viewer iframe {
@@ -44,8 +45,6 @@ body, html {
 
 .editor {
     background-color: white;
-    overflow-x: auto;
-    overflow-y: auto;
     display: flex;
     flex-direction: column;
 }
@@ -56,9 +55,9 @@ body, html {
 }
 
 #ckeditor {
-    min-width: 100%;  /* Enable horizontal scrolling when content overflows */
-    white-space: nowrap;  /* Ensure horizontal scrolling works */
-    box-sizing: border-box;  /* Make sure padding/borders are considered */
+    width: auto; /* Changed from min-width: 100% to auto */
+    white-space: normal; /* Allow wrapping for better resizing */
+    box-sizing: border-box;
 }
 
 .ck-editor__editable {
@@ -79,7 +78,7 @@ body, html {
 }
 
 .ck.ck-editor__editable_inline {
-    overflow: hidden !important;
+    overflow: visible !important; /* Allow overflow to support dynamic resizing */
 }
 
 .page {
@@ -142,18 +141,6 @@ body, html {
 #loadingText {
     font-size: 16px;
     color: #333;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    border: 1px solid #000;
-}
-
-th, td {
-    padding: 8px;
-    border: 1px solid #000;
-    text-align: left;
 }
 
 /* Shared button styles */
@@ -373,4 +360,11 @@ label input[type="checkbox"]:checked::before {
     .info-icon {
         margin-top: 5px;
     }
+}
+
+.ck-content table, .ck-content table td, .ck-content table th {
+    width: auto !important; /* Force auto width for table columns */
+    min-width: 50px !important; /* Ensure a minimum column width */
+    max-width: none !important; /* Prevent any max-width limitations */
+    box-sizing: border-box !important;
 }

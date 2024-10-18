@@ -1,39 +1,3 @@
-let editorInstance;
-
-// Initialize CKEditor with event listener to store changes
-ClassicEditor
-    .create(document.querySelector('#ckeditor'), {
-        toolbar: [
-            'heading', '|', 'bold', 'italic', '|',
-            'bulletedList', 'numberedList', 'blockQuote', '|',
-            'insertTable', 'tableColumn', 'tableRow', 'mergeTableCells', '|',
-            'undo', 'redo'
-        ],
-        table: {
-            contentToolbar: [
-                'tableColumn', 'tableRow', 'mergeTableCells'
-            ]
-        }
-    })
-    .then(editor => {
-        editorInstance = editor;
-
-        // Set up auto-save to local storage on data change
-        editor.model.document.on('change:data', () => {
-            const editorContent = editorInstance.getData();
-            localStorage.setItem("editorContent", editorContent);
-        });
-
-        // Load editor content from local storage if available
-        const savedEditorContent = localStorage.getItem("editorContent");
-        if (savedEditorContent) {
-            editorInstance.setData(savedEditorContent);
-        }
-    })
-    .catch(error => {
-        console.error('Error initializing CKEditor:', error);
-    });
-
 function confirmClearEditor() {
     const confirmClear = confirm("Are you sure you want to clear the editor? This action cannot be undone.");
     
